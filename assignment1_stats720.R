@@ -1,10 +1,8 @@
+## ---
+## title: "STATS - 720 Assignment-1"
+## author: "Ikram Jmouhi (Student number: 400550954)"
 
----
-  title: "STATS - 720 Assignment-1"
-author: "Ikram Jmouhi (Student number: 400550954)"
----
-  
-#librairies
+# packages
 library(dotwhisker)
 library(effects)
 library(stats)
@@ -29,9 +27,12 @@ correlation_matrix
 #The two predictors Rape and Assault have a high correlation coefficient 
 #this suggests that the two predictors are highly correlated and bring the same information
 #to the model. 
-#to avoid multicolinearity problems, I will only keep one of the two predictors. 
-#UrbaPop and assault have a low correlation coefficient 
-#My predictors will be Assault and urbanPop 
+#to avoid multicollinearity problems, I will only keep one of the two predictors. 
+#UrbanPop and assault have a low correlation coefficient 
+##My predictors will be Assault and urbanPop
+
+## BMB: OK. Collinearity in general is not a problem, but if you need to limit the
+## number of parameters, eliminating highly correlated predictors is one sensible strategy
 
 ########################################################
 #Murder and assaults represent the number of murder and assaults per 100,000 people in each state
@@ -53,10 +54,17 @@ plot(model, which = 1)
 #Georgia, Arizona and Delaware may be outliers. 
 #######################################################
 
+## BMB: note that plot.lm() **always** marks the three most extreme residuals, by default
+## (so this is not based on a statistical judgement)
+
+## BMB: you should generally assess normality *last*
+
 #Q_Q plot to assess the normality of residuals:
 plot(model, which = 2)
 #Most of the point follow the same line which suggest a normal distribution 
 #we can also detect Georgia, arizona and delaware as outliers in this plot too. 
+
+## BMB: see comment above (these are the same three points)
 
 #######################################################
 #Residual vs leverage plot (cook's distance)
@@ -65,9 +73,15 @@ plot(model, which = 5)
 
 ######################################################
 
+## BMB: what about the  scale-location plot, which is more
+##  reliable for detecting heteroscedasticity?
 
 #coefficient plot using dotwhisker
 dwplot(model, scales = "fixed", center = TRUE, scale = TRUE)
+
+## BMB: I don't think these arguments do anything ???
+## this looks the same as your plot ...
+dwplot(model, scales = "junk", center = NA, scale = NA)
 
 #UrbanPop as a larger magnitude than Assault 
 #I will scale and center my predictors 
@@ -90,6 +104,8 @@ plot(effects_model)
 
 #Question 2 
 
+## BMB: best not to use built-in names ('data', 'contrasts') for variable names
+
 data <- data.frame(
   Period = as.factor(c("Before", "After", "Before", "After")),
   Treatment = as.factor(c("Control", "Control", "Impact", "Impact"))
@@ -98,10 +114,11 @@ data <- data.frame(
 #contrasts
 contrasts <- matrix(
   c(
-    0.5, 0.5, 0.5, 0.5,   # Average of Control and Impact during Before
-    1, -1, 0, 0,           # Difference between Control and Impact before treatment
-    0.5, 0.5, -0.5, -0.5,  # Difference between (average of Control and Impact) between After and Before
-    -1, 1, 1, -1           # Difference of (C-I) difference between Before and After periods
+      0.5, 0.5, 0.5, 0.5,   # Average of Control and Impact during Before
+      ## BMB: no, this is the (2x) the average of *all* levels (rep(0.25, 4) would be the average)
+      1, -1, 0, 0,           # Difference between Control and Impact before treatment
+      0.5, 0.5, -0.5, -0.5,  # Difference between (average of Control and Impact) between After and Before
+      -1, 1, 1, -1           # Difference of (C-I) difference between Before and After periods
   ),
   nrow = 4,               
   byrow = TRUE            
@@ -109,6 +126,8 @@ contrasts <- matrix(
 #INVERSE 
 c_m <- MASS::fractions(solve(contrasts))
 print(c_m)
+
+## BMB: note that your 'contrasts' is the *inverse* contrast matrix, c_m is the contrast matrix
 
 # the minimal model matrix (additive model)
 minimal_model_matrix<-model.matrix(~ Period + Treatment, data)
@@ -122,16 +141,19 @@ model.matrix(~ Period * Treatment, data)
 #model matrix for 0+Period:Treatment
 model.matrix(~0+Period:Treatment,data)
 
+## BMB: what do you conclude?
 
 ################################################################################
 #Question 3 
 
+## BMB: nice to allow the options. You didn't allow for varying *degrees* of misspecification though ...
 #the simulation function with a chosen violation
 sim_fun <- function(n = 100, slope = 1, sd = 1, intercept = 0, violation = "linearity") {
   x <- runif(n)
   if (violation == "linearity") {
     y <- rnorm(n, intercept + slope * x^2, sd = sd)  # Quadratic relationship
   } else if (violation == "homoscedasticity") {
+    ## BMB: this would be bad if x<0
     y <- rnorm(n, intercept + slope * x, sd = sd * x)  # Heteroscedasticity
   } else if (violation == "normality") {
     y <- rt(n, df = 3)  # t-distributed errors
@@ -144,7 +166,8 @@ sim_fun <- function(n = 100, slope = 1, sd = 1, intercept = 0, violation = "line
 #run simulations
 run_simulations <- function(violation = "linearity", num_simulations = 1000) {
   true_slope <- 1  # True slope value
-  
+
+  ## BMB: thank you for pre-allocating
   results <- data.frame(
     bias = numeric(num_simulations),
     rmse = numeric(num_simulations),
@@ -195,7 +218,12 @@ normality <- run_simulations(violation = "normality")
  summary(linearity, na.rm = TRUE)
  #the mean bias and RMSE are small, the estimated slope is very close to the true slope under the linearity violation
  #the model doesn't always detect the linearity violation (power is less than 1)
- #the confidence intervals don't always include the true value (coverage is not 1).
+##the confidence intervals don't always include the true value (coverage is not 1).
+
+## BMB: we want the coverage to be 0.95 (i.e. 1-alpha), *not* 1.00.
+## you should compute the *means* of these results to get the bias, rmse, etc... the individual values
+##  are *not* power etc.
+
 ################################################################ 
 summary(homoscedasticity, na.rm = TRUE)
 
@@ -209,3 +237,8 @@ summary(normality, na.rm = TRUE)
 #The estimated slopes can be biased and far from the true slope (high RMSE)
 #the model is not effective at detecting the violation (low power)
 
+## BMB: interesting, but it is hard to compare magnitudes of violation
+##  across different types of violation (i.e., is df = 3 comparable to a quadratic
+##  rather than a linear function of x over the range (0,1) ?
+
+## mark: 8.5/10
