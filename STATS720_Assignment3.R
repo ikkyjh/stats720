@@ -28,7 +28,9 @@ logLik(lmer_model)
 logLik(lme_model)
 #The two likelihoods  are very similar to each other so it would be hard 
 #to say which model is a better fit 
-#the lme model is slightly a bit higher than the lmer model so I would say lme is a better fit
+##the lme model is slightly a bit higher than the lmer model so I would say lme is a better fit
+
+## BMB: this is backwards -- the magitude is larger, but that's a *more negative* value, so the log-likelihood is worse
 
 #2)
 
@@ -36,8 +38,10 @@ logLik(lme_model)
 scaled_data <- Early
 scaled_data$age <- scale(Early$age)
 
+early_scaled <- scaled_data
+
 # Fit a linear mixed model with lmer using scaled age
-lmer_model_scaled <- lmer(cog ~ age + trt + (1 + age | id), data = scaled_data)
+lmer_model_scaled <- lmer(cog ~ age + trt + (1 + age | id), data = early_scaled)
 
 # Fit a linear mixed model with lme using scaled age
 lme_model_scaled <- lme(fixed = cog ~ age + trt, random = ~1 + age | id, data = scaled_data, control = lmeControl(opt = "optim"))
@@ -94,6 +98,9 @@ print(se_difference)
 
 
 
+## BMB: this isn't reproducible -- you must have renamed a variable???
+early_sca_lmer <- lmer_model_scaled
+
 #3) 
 anova(early_sca_lmer,ddf="Satterthwaite")
 anova(early_sca_lmer,ddf="Kenward-Roger")
@@ -116,6 +123,8 @@ random_effects_df <- data.frame(
   RandomIntercept = random_effects[[1]]$`(Intercept)`,
   RandomAgeEffect = random_effects[[1]]$age
 )
+
+## BMB: this is actually replicating the random_effects[[1]] data frame?
 
 # Create the scatter plot
 with(random_effects_df, plot(
@@ -140,7 +149,11 @@ with(random_effects_df, plot(
 #in our sample, offering a comprehensive exploration of how 'age' influences
 #cognitive scores within the specific context of our dataset.
 
-# 
+                                        #
+
+## BMB: again non-reproducible!
+
+early_scaled <- scaled_data
 # Fit the model with independent intercept and age variation
 model_random_slope <- lmer(cog ~ age + trt + (1 + age | id), data = early_scaled)
 
@@ -162,9 +175,12 @@ lrt_intercept_only <- anova(early_sca_lmer, model_intercept_only)
 pb_independent <- PBmodcomp(early_sca_lmer, model_random_slope, nsim = 1000)
 PBmodcomp(largeModel=model_random_slope,smallModel=model_intercept_only)
 
-#model with intercept only vs. full model
-boot_intercept_only <- bootMer(model_intercept_only, nsim = 1000)
+##model with intercept only vs. full model
+##  BMB: what is this doing? doesn't run ... 
+## boot_intercept_only <- bootMer(model_intercept_only, nsim = 1000)
 PBmodcomp(largeModel=early_sca_lmer,smallModel=model_random_slope)
 
+## BMB: what do you conclude??
 
+## mark: 8/10
 
