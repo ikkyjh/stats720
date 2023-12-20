@@ -7,6 +7,7 @@ library(ggplot2)
 library(lme4)
 library(ggeffects)
 
+pdf("tmp.pdf")
 ################################################################################
 #1
 data(nepali)
@@ -82,6 +83,8 @@ plot(mixed_model)
 #Plotting the data along with model predictions and confidence intervals
 effect <- ggeffect(mixed_model, terms = c("mage", "age", "sex","lit"))
 plot(effect)
+## BMB: did you notice the weird zig-zags?  apparently plot can't handle
+## this many different terms? (age, sex, mage are all taken care of)
 
 #While the initial study investigated the impact of vitamin A on children's 
 #early growth, my analysis focused on understanding factors influencing individual
@@ -112,10 +115,15 @@ glm_model <- glmer(use ~ urban + age + livch +(urban|district), Contraception, b
 
 plot(fitted(glm_model), residuals(glm_model))
 abline(h = 0, col = "red", lty = 2)
+## BMB: useless ...
 
 ##QQ plot 
 qqnorm(residuals(glm_model))
 qqline(residuals(glm_model))
+
+## BMB:  useless ...
+
+## DHARMa or performance::check_model() are both better for this
 
 ##predictions 
 predictions_glm <- ggpredict(glm_model, terms = c("age[all]","urban"))
@@ -136,12 +144,16 @@ model_laplace <- glmer(use ~ urban+scale(age)+livch+(1|district), Contraception,
 #Gauss Hermite Quadrature
 
 model_gauss<- update(model_laplace, nAGQ = 20)
-                     
+
+## BMB: comparison???
+
 #The original study utilized a multilevel model to analyze factors affecting 
 #immunization uptake, revealing residual household variation. 
 #Our approach mirrors this, considering age, urban living, and district-specific 
 #effects to address socioeconomic and geographical nuances.   
 
+
+dev.off()
 
 ##Question 3 : 
 library(brms)
@@ -157,6 +169,8 @@ brm_model <- brm(
 # summary
 summary(brm_model)
 
+## BMB: conclusions?
+
 ################################################################################
 library(rstanarm)
 
@@ -171,6 +185,8 @@ stan_glmer_model <- stan_glmer(
 
 # summary
 summary(stan_glmer_model)
+
+## BMB: conclusions?
 
 #################################################################################
 #Question 4 
@@ -352,3 +368,5 @@ evaluate_parameters(glmmPQL_results_param2, param_set2)
 
 cat("GLM with nAGQ = 3 Results:\n")
 evaluate_parameters(glmer_results_param2, param_set2)
+
+## BMB: conclusions???

@@ -1,7 +1,7 @@
----
-  title: "STATS - 720 Assignment-2"
-author: "Ikram Jmouhi (Student number: 400550954)"
----
+## ---
+## title: "STATS - 720 Assignment-2"
+## author: "Ikram Jmouhi (Student number: 400550954)"
+## ---
 
 library(rpart)
 library(ggplot2)
@@ -11,6 +11,8 @@ library(coefplot)
 library(bbmle)
 library(brglm2)
 library(brms)
+library(arm)
+library(lmtest)
 
 ############################################################"
 #1
@@ -32,7 +34,9 @@ summary(kyphosis_model)
 #"Start" and "Number" are statistically significant predictors of the presence or absence 
 #of kyphosis, as indicated by their low p-values (0.00229 and 0.06785)
 #The coefficient for "Age" is not statistically significant
-#The model improves the fit compared to a null model, as indicated by the residual devianc (lower than null deviance)
+#The model improves the fit compared to a null model, as indicated by the residual deviance (lower than null deviance)
+
+## BMB: latter is always true??
 
 # Create diagnostic plots
 plot(kyphosis_model)
@@ -71,6 +75,8 @@ kyphosis_model$coefficients
 #Coefficient plot 
 coefplot(kyphosis_model, horizontal = TRUE)
 
+## BMB: coef plots with unscaled predictors are always problematic ...
+
 ##################################################################
 #QUESTION 2 
 
@@ -106,6 +112,8 @@ pearson_chi_squared <- residual_deviance / df
 ratio_deviance_df <- residual_deviance / df
 
 #pearson_chi_squared > 1 , no overdispersion detected, so the poisson model is a good fit 
+
+## BMB: you mean < 1 ?
 
 # Summary of the glm model
 
@@ -212,3 +220,4 @@ print(lrt_result_PI)
 
 
 
+## BMB: 9/10

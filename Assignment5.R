@@ -89,7 +89,9 @@ gam_summary
 #model are higher compared to the GAM. However, for the interaction 
 #term (age_sc:urbanY), the estimate is higher in the GAM model,
 #while the standard error is higher in the glmer model.
-.
+
+## BMB: but differences are very small!
+
 #################################################################
 #model with a fixed quadratic function of age
 gam_quad_model <- gam(use_n ~ poly(age_sc, 2) + urban + s(district, bs = "re"),
@@ -139,6 +141,8 @@ grid.arrange(p1, p2, ncol = 2)
 # Creating a quadratic-age term separately for urban and rural settings
 Contraception$age_sc_squared_urban <- ifelse(Contraception$urban == "Y", poly(Contraception$age_sc, 2), 0)
 Contraception$age_sc_squared_rural <- ifelse(Contraception$urban == "N", poly(Contraception$age_sc, 2), 0)
+
+## BMB: don't need both s(age_sc, by = urban) *and* quadratic terms -- these are redundant
 
 #model with a quadratic-age urban/rural interaction
 gam_interaction_model <- gam(use_n ~ s(age_sc, by = urban) + age_sc_squared_urban + age_sc_squared_rural + s(district, bs = "re"),
@@ -196,6 +200,12 @@ quad_age_glmer <- glmer(use ~ urban + poly(age, 2):urban + (poly(age, 2) | distr
 urban_age_district_gam <- gam(use ~ urban + s(age, bs = "tp", by = urban) + s(age, district, bs = 'fs'),
                               data = Contraception, family = "binomial")
 
+## BMB: where is newdata defined?
+
+newdata <- with(Contraception,
+           expand.grid(urban = levels(urban),
+                       age = unique(age),
+                       district = unique(district)))
 #predictions for the glmer() model (quad_age_glmer)
 pred_glm <- predict(quad_age_glmer, newdata = newdata, type = "response", re.form = NULL)
 
@@ -221,3 +231,5 @@ p6 <- ggplot(pred_gam, aes(x = age, y = fit, color = urban)) +
 
 #plots side by side
 grid.arrange(p5, p6, ncol = 2)
+
+## BMB: hard to replicate -- several missing pieces when I tried to run everything
